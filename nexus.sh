@@ -16,19 +16,23 @@ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 
 # Detect the shell configuration file
 SHELL_CONFIG=""
+USER_SHELL=$(basename "$SHELL")
 
-if [ -f "$HOME/.bashrc" ]; then
+if [[ "$USER_SHELL" == "fish" ]]; then
+    SHELL_CONFIG="$HOME/.config/fish/config.fish"
+elif [ -f "$HOME/.bashrc" ]; then
     SHELL_CONFIG="$HOME/.bashrc"
 elif [ -f "$HOME/.zshrc" ]; then
     SHELL_CONFIG="$HOME/.zshrc"
 fi
 
 # Ensure Rust is available in the current session
-if [ -n "$SHELL_CONFIG" ]; then
-    echo "Applying Rust environment without restarting shell..."
-    source "$HOME/.cargo/env"
+if [[ "$USER_SHELL" == "fish" ]]; then
+    echo "Detected Fish shell. Applying Rust environment..."
+    source "$HOME/.cargo/env.fish"
 else
-    echo "Warning: Could not find a shell profile file. Please restart the shell if Cargo is not recognized."
+    echo "Applying Rust environment..."
+    source "$HOME/.cargo/env"
 fi
 
 # Verify Rust installation
