@@ -48,14 +48,14 @@ rm -rf protoc3 protoc-3.15.8-linux-x86_64.zip
 echo "Downloading Protobuf (protoc) v3.15.8..."
 curl -OL https://github.com/google/protobuf/releases/download/v3.15.8/protoc-3.15.8-linux-x86_64.zip
 
-echo "Unzipping Protobuf (forcing overwrite)..."
-unzip -o protoc-3.15.8-linux-x86_64.zip -d protoc3
+echo "Unzipping Protobuf (forcing overwrite & quiet mode)..."
+unzip -o -qq protoc-3.15.8-linux-x86_64.zip -d protoc3
 
 echo "Moving Protobuf binaries to /usr/local/bin/..."
-sudo mv protoc3/bin/* /usr/local/bin/
+sudo mv -f protoc3/bin/* /usr/local/bin/
 
 echo "Moving Protobuf includes to /usr/local/include/..."
-sudo mv protoc3/include/* /usr/local/include/
+sudo mv -f protoc3/include/* /usr/local/include/
 
 echo "Cleaning up downloaded files..."
 rm -rf protoc3 protoc-3.15.8-linux-x86_64.zip
