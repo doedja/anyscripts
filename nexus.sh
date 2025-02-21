@@ -9,6 +9,8 @@ sudo apt update && sudo apt upgrade -y
 echo "Installing dependencies..."
 sudo apt install -y build-essential pkg-config libssl-dev git-all
 
+sudo appt install zip
+
 echo "Downloading Protobuf (protoc) v3.15.8..."
 curl -OL https://github.com/google/protobuf/releases/download/v3.15.8/protoc-3.15.8-linux-x86_64.zip
 
