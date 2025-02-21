@@ -14,22 +14,32 @@ sudo apt install -y build-essential pkg-config libssl-dev git-all curl unzip aut
 echo "Installing Rust (required for Cargo)..."
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 
-# Detect which shell the user is using
-SHELL_CONFIG=""
+# Detect the shell type
+USER_SHELL=$(basename "$SHELL")
 
-if [ -f "$HOME/.bashrc" ]; then
-    SHELL_CONFIG="$HOME/.bashrc"
-elif [ -f "$HOME/.zshrc" ]; then
-    SHELL_CONFIG="$HOME/.zshrc"
-fi
+# Apply Rust environment (fix for shell exit issue)
+echo "Applying Rust environment without requiring shell restart..."
+set +e  # Disable exit on error temporarily
 
-# Reload shell configuration to apply Rust installation
-if [ -n "$SHELL_CONFIG" ]; then
-    echo "Reloading shell environment from $SHELL_CONFIG..."
-    source "$SHELL_CONFIG"
+if [[ "$USER_SHELL" == "fish" ]]; then
+    if [[ -f "$HOME/.cargo/env.fish" ]]; then
+        echo "Detected Fish shell. Sourcing Rust environment..."
+        source "$HOME/.cargo/env.fish"
+    else
+        echo "Warning: Rust environment file for Fish not found. Manually add $HOME/.cargo/bin to PATH."
+        export PATH="$HOME/.cargo/bin:$PATH"
+    fi
 else
-    echo "Warning: Could not find a shell profile file to reload environment variables."
+    if [[ -f "$HOME/.cargo/env" ]]; then
+        echo "Detected Bash/Zsh shell. Sourcing Rust environment..."
+        . "$HOME/.cargo/env"
+    else
+        echo "Warning: Rust environment file not found. Manually adding Rust to PATH."
+        export PATH="$HOME/.cargo/bin:$PATH"
+    fi
 fi
+
+set -e  # Re-enable exit on error
 
 # Verify Rust installation
 if ! command -v cargo &> /dev/null; then
