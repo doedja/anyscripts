@@ -42,11 +42,14 @@ echo "Rust and Cargo installed successfully."
 echo "Removing any existing Protobuf (protoc) installation..."
 sudo rm -rf /usr/local/bin/protoc /usr/local/include/google /usr/local/lib/libprotobuf* /usr/local/lib/pkgconfig/protobuf* ~/.protobuf*
 
+echo "Ensuring Protobuf directory is clean..."
+rm -rf protoc3 protoc-3.15.8-linux-x86_64.zip
+
 echo "Downloading Protobuf (protoc) v3.15.8..."
 curl -OL https://github.com/google/protobuf/releases/download/v3.15.8/protoc-3.15.8-linux-x86_64.zip
 
-echo "Unzipping Protobuf..."
-unzip protoc-3.15.8-linux-x86_64.zip -d protoc3
+echo "Unzipping Protobuf (forcing overwrite)..."
+unzip -o protoc-3.15.8-linux-x86_64.zip -d protoc3
 
 echo "Moving Protobuf binaries to /usr/local/bin/..."
 sudo mv protoc3/bin/* /usr/local/bin/
