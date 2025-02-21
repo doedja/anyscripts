@@ -1,5 +1,5 @@
 #!/bin/bash
-#curl -sSL https://raw.githubusercontent.com/doedja/anyscripts/refs/heads/main/nexus.sh | bash
+#curl -sSL -H "Cache-Control: no-cache" https://raw.githubusercontent.com/doedja/anyscripts/refs/heads/main/nexus.sh | bash
 #curl https://cli.nexus.xyz/ | sh
 
 set -e  # Exit if a command fails
