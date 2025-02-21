@@ -1,4 +1,5 @@
 #!/bin/bash
+#curl -sSL https://raw.githubusercontent.com/doedja/anyscripts/refs/heads/main/nexus.sh | bash
 
 set -e  # Exit immediately if a command exits with a non-zero status
 set -o pipefail  # Catch errors in piped commands
