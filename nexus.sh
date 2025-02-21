@@ -9,9 +9,35 @@ echo "Updating system packages..."
 sudo apt update && sudo apt upgrade -y
 
 echo "Installing dependencies..."
-sudo apt install -y build-essential pkg-config libssl-dev git-all
+sudo apt install -y build-essential pkg-config libssl-dev git-all curl unzip
 
-sudo appt install zip
+echo "Installing Rust (required for Cargo)..."
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+
+# Detect which shell the user is using
+SHELL_CONFIG=""
+
+if [ -f "$HOME/.bashrc" ]; then
+    SHELL_CONFIG="$HOME/.bashrc"
+elif [ -f "$HOME/.zshrc" ]; then
+    SHELL_CONFIG="$HOME/.zshrc"
+fi
+
+# Reload shell configuration to apply Rust installation
+if [ -n "$SHELL_CONFIG" ]; then
+    echo "Reloading shell environment from $SHELL_CONFIG..."
+    source "$SHELL_CONFIG"
+else
+    echo "Warning: Could not find a shell profile file to reload environment variables."
+fi
+
+# Verify Rust installation
+if ! command -v cargo &> /dev/null; then
+    echo "Error: Cargo (Rust) is not installed properly. Please restart your terminal and try again."
+    exit 1
+fi
+
+echo "Rust and Cargo installed successfully."
 
 echo "Downloading Protobuf (protoc) v3.15.8..."
 curl -OL https://github.com/google/protobuf/releases/download/v3.15.8/protoc-3.15.8-linux-x86_64.zip
@@ -31,7 +57,13 @@ rm -rf protoc3 protoc-3.15.8-linux-x86_64.zip
 echo "Installing Nexus CLI..."
 curl https://cli.nexus.xyz/ | sh
 
-echo "Installation complete! Verifying installations..."
+echo "Verifying installations..."
+
+echo -n "Rust version: "
+rustc --version
+
+echo -n "Cargo version: "
+cargo --version
 
 echo -n "Protobuf version: "
 protoc --version
