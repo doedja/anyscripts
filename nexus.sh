@@ -2,14 +2,15 @@
 #curl -sSL https://raw.githubusercontent.com/doedja/anyscripts/refs/heads/main/nexus.sh | bash
 #curl https://cli.nexus.xyz/ | sh
 
-set -e  # Exit immediately if a command fails
+set -e  # Exit if a command fails
 set -o pipefail  # Catch errors in piped commands
 
 echo "Updating system packages..."
-sudo apt update && sudo apt upgrade -y
+export DEBIAN_FRONTEND=noninteractive  # Prevent interactive prompts
+sudo apt update && sudo apt upgrade -y || true  # Allow script to continue even if nothing upgrades
 
 echo "Installing dependencies..."
-sudo apt install -y build-essential pkg-config libssl-dev git-all curl unzip autoconf automake libtool make g++
+sudo apt install -y build-essential pkg-config libssl-dev git-all curl unzip autoconf automake libtool make g++ || true
 
 # Detect system architecture
 ARCH=$(uname -m)
@@ -49,9 +50,9 @@ else
 fi
 
 echo "Verifying Protobuf installation..."
-protoc --version
+protoc --version || { echo "Protobuf installation failed!"; exit 1; }
 
 echo "Installing Nexus CLI..."
-curl https://cli.nexus.xyz/ | sh
+curl https://cli.nexus.xyz/ | sh || { echo "Nexus CLI installation failed!"; exit 1; }
 
 echo "All done!"
