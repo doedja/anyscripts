@@ -2,14 +2,14 @@
 #curl -sSL https://raw.githubusercontent.com/doedja/anyscripts/refs/heads/main/nexus.sh | bash
 #curl https://cli.nexus.xyz/ | sh
 
-set -e  # Exit immediately if a command exits with a non-zero status
+set -e  # Exit immediately if a command fails
 set -o pipefail  # Catch errors in piped commands
 
 echo "Updating system packages..."
 sudo apt update && sudo apt upgrade -y
 
 echo "Installing dependencies..."
-sudo apt install -y build-essential pkg-config libssl-dev git-all curl unzip
+sudo apt install -y build-essential pkg-config libssl-dev git-all curl unzip autoconf automake libtool make g++
 
 echo "Installing Rust (required for Cargo)..."
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
@@ -42,39 +42,36 @@ echo "Rust and Cargo installed successfully."
 echo "Removing any existing Protobuf (protoc) installation..."
 sudo rm -rf /usr/local/bin/protoc /usr/local/include/google /usr/local/lib/libprotobuf* /usr/local/lib/pkgconfig/protobuf* ~/.protobuf*
 
-echo "Ensuring Protobuf directory is clean..."
-rm -rf protoc3 protoc-3.15.8-linux-x86_64.zip
+# Detect system architecture
+ARCH=$(uname -m)
 
-echo "Downloading Protobuf (protoc) v3.15.8..."
-curl -OL https://github.com/google/protobuf/releases/download/v3.15.8/protoc-3.15.8-linux-x86_64.zip
+if [[ "$ARCH" == "aarch64" ]]; then
+    echo "Detected architecture: aarch64 (ARM64). Installing Protobuf 3.15.8 using precompiled binary..."
 
-echo "Unzipping Protobuf (forcing overwrite & quiet mode)..."
-unzip -o -qq protoc-3.15.8-linux-x86_64.zip -d protoc3
+    cd /usr/local/src
+    wget https://github.com/protocolbuffers/protobuf/releases/download/v3.15.8/protoc-3.15.8-linux-aarch_64.zip
+    unzip -o protoc-3.15.8-linux-aarch_64.zip -d protoc3
+    sudo mv protoc3/bin/* /usr/local/bin/
+    sudo mv protoc3/include/* /usr/local/include/
+    rm -rf protoc3 protoc-3.15.8-linux-aarch_64.zip
 
-echo "Moving Protobuf binaries to /usr/local/bin/..."
-sudo mv -f protoc3/bin/* /usr/local/bin/
+else
+    echo "Detected architecture: x86_64. Compiling Protobuf from source..."
 
-echo "Moving Protobuf includes to /usr/local/include/..."
-sudo mv -f protoc3/include/* /usr/local/include/
+    cd /usr/local/src
+    sudo git clone --recurse-submodules -b v3.15.8 https://github.com/protocolbuffers/protobuf.git
+    cd protobuf
+    sudo ./autogen.sh
+    sudo ./configure
+    sudo make -j$(nproc)
+    sudo make install
+    sudo ldconfig
+fi
 
-echo "Cleaning up downloaded files..."
-rm -rf protoc3 protoc-3.15.8-linux-x86_64.zip
+echo "Verifying Protobuf installation..."
+protoc --version
 
 echo "Installing Nexus CLI..."
 curl https://cli.nexus.xyz/ | sh
-
-echo "Verifying installations..."
-
-echo -n "Rust version: "
-rustc --version
-
-echo -n "Cargo version: "
-cargo --version
-
-echo -n "Protobuf version: "
-protoc --version
-
-echo -n "Nexus CLI check: "
-nexus --help || echo "Nexus CLI installation failed."
 
 echo "All done!"
