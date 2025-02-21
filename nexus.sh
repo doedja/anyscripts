@@ -14,7 +14,7 @@ sudo apt install -y build-essential pkg-config libssl-dev git-all curl unzip aut
 echo "Installing Rust (required for Cargo)..."
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 
-# Detect which shell the user is using
+# Detect the shell configuration file
 SHELL_CONFIG=""
 
 if [ -f "$HOME/.bashrc" ]; then
@@ -23,12 +23,12 @@ elif [ -f "$HOME/.zshrc" ]; then
     SHELL_CONFIG="$HOME/.zshrc"
 fi
 
-# Reload shell configuration to apply Rust installation
+# Ensure Rust is available in the current session
 if [ -n "$SHELL_CONFIG" ]; then
-    echo "Reloading shell environment from $SHELL_CONFIG..."
-    source "$SHELL_CONFIG"
+    echo "Applying Rust environment without restarting shell..."
+    source "$HOME/.cargo/env"
 else
-    echo "Warning: Could not find a shell profile file to reload environment variables."
+    echo "Warning: Could not find a shell profile file. Please restart the shell if Cargo is not recognized."
 fi
 
 # Verify Rust installation
@@ -39,33 +39,41 @@ fi
 
 echo "Rust and Cargo installed successfully."
 
-echo "Removing any existing Protobuf (protoc) installation..."
-sudo rm -rf /usr/local/bin/protoc /usr/local/include/google /usr/local/lib/libprotobuf* /usr/local/lib/pkgconfig/protobuf* ~/.protobuf*
-
 # Detect system architecture
 ARCH=$(uname -m)
 
-if [[ "$ARCH" == "aarch64" ]]; then
-    echo "Detected architecture: aarch64 (ARM64). Installing Protobuf 3.15.8 using precompiled binary..."
+# Check if Protobuf is installed and meets the version requirement (3.15+)
+PROTOC_VERSION=$(protoc --version 2>/dev/null | awk '{print $2}')
+PROTOC_MIN_VERSION="3.15.0"
 
-    cd /usr/local/src
-    wget https://github.com/protocolbuffers/protobuf/releases/download/v3.15.8/protoc-3.15.8-linux-aarch_64.zip
-    unzip -o protoc-3.15.8-linux-aarch_64.zip -d protoc3
-    sudo mv protoc3/bin/* /usr/local/bin/
-    sudo mv protoc3/include/* /usr/local/include/
-    rm -rf protoc3 protoc-3.15.8-linux-aarch_64.zip
-
+if [[ -n "$PROTOC_VERSION" && "$(printf '%s\n' "$PROTOC_MIN_VERSION" "$PROTOC_VERSION" | sort -V | tail -1)" == "$PROTOC_VERSION" ]]; then
+    echo "Protobuf $PROTOC_VERSION is already installed (>= 3.15.0). Skipping reinstallation."
 else
-    echo "Detected architecture: x86_64. Compiling Protobuf from source..."
+    echo "Removing any existing Protobuf (protoc) installation..."
+    sudo rm -rf /usr/local/bin/protoc /usr/local/include/google /usr/local/lib/libprotobuf* /usr/local/lib/pkgconfig/protobuf* ~/.protobuf*
 
-    cd /usr/local/src
-    sudo git clone --recurse-submodules -b v3.15.8 https://github.com/protocolbuffers/protobuf.git
-    cd protobuf
-    sudo ./autogen.sh
-    sudo ./configure
-    sudo make -j$(nproc)
-    sudo make install
-    sudo ldconfig
+    if [[ "$ARCH" == "aarch64" ]]; then
+        echo "Detected architecture: aarch64 (ARM64). Installing Protobuf 3.15.8 using precompiled binary..."
+
+        cd /usr/local/src
+        wget https://github.com/protocolbuffers/protobuf/releases/download/v3.15.8/protoc-3.15.8-linux-aarch_64.zip
+        unzip -o protoc-3.15.8-linux-aarch_64.zip -d protoc3
+        sudo mv protoc3/bin/* /usr/local/bin/
+        sudo mv protoc3/include/* /usr/local/include/
+        rm -rf protoc3 protoc-3.15.8-linux-aarch_64.zip
+
+    else
+        echo "Detected architecture: x86_64. Compiling Protobuf from source..."
+
+        cd /usr/local/src
+        sudo git clone --recurse-submodules -b v3.15.8 https://github.com/protocolbuffers/protobuf.git
+        cd protobuf
+        sudo ./autogen.sh
+        sudo ./configure
+        sudo make -j$(nproc)
+        sudo make install
+        sudo ldconfig
+    fi
 fi
 
 echo "Verifying Protobuf installation..."
