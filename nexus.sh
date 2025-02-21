@@ -14,25 +14,18 @@ sudo apt install -y build-essential pkg-config libssl-dev git-all curl unzip aut
 echo "Installing Rust (required for Cargo)..."
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 
-# Detect the shell configuration file
-SHELL_CONFIG=""
+# Detect the shell type
 USER_SHELL=$(basename "$SHELL")
 
-if [[ "$USER_SHELL" == "fish" ]]; then
-    SHELL_CONFIG="$HOME/.config/fish/config.fish"
-elif [ -f "$HOME/.bashrc" ]; then
-    SHELL_CONFIG="$HOME/.bashrc"
-elif [ -f "$HOME/.zshrc" ]; then
-    SHELL_CONFIG="$HOME/.zshrc"
-fi
-
 # Ensure Rust is available in the current session
-if [[ "$USER_SHELL" == "fish" ]]; then
-    echo "Detected Fish shell. Applying Rust environment..."
-    source "$HOME/.cargo/env.fish"
+if [[ -f "$HOME/.cargo/env" ]] && [[ "$USER_SHELL" != "fish" ]]; then
+    echo "Applying Rust environment for Bash/Zsh..."
+    . "$HOME/.cargo/env" || true
+elif [[ -f "$HOME/.cargo/env.fish" ]] && [[ "$USER_SHELL" == "fish" ]]; then
+    echo "Applying Rust environment for Fish..."
+    source "$HOME/.cargo/env.fish" || true
 else
-    echo "Applying Rust environment..."
-    source "$HOME/.cargo/env"
+    echo "Warning: Rust environment file not found. Please restart your shell if Cargo is not recognized."
 fi
 
 # Verify Rust installation
