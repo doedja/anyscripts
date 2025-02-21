@@ -11,44 +11,6 @@ sudo apt update && sudo apt upgrade -y
 echo "Installing dependencies..."
 sudo apt install -y build-essential pkg-config libssl-dev git-all curl unzip autoconf automake libtool make g++
 
-echo "Installing Rust (required for Cargo)..."
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-
-# Detect the shell type
-USER_SHELL=$(basename "$SHELL")
-
-# Apply Rust environment (fix for shell exit issue)
-echo "Applying Rust environment without requiring shell restart..."
-set +e  # Disable exit on error temporarily
-
-if [[ "$USER_SHELL" == "fish" ]]; then
-    if [[ -f "$HOME/.cargo/env.fish" ]]; then
-        echo "Detected Fish shell. Sourcing Rust environment..."
-        source "$HOME/.cargo/env.fish"
-    else
-        echo "Warning: Rust environment file for Fish not found. Manually add $HOME/.cargo/bin to PATH."
-        export PATH="$HOME/.cargo/bin:$PATH"
-    fi
-else
-    if [[ -f "$HOME/.cargo/env" ]]; then
-        echo "Detected Bash/Zsh shell. Sourcing Rust environment..."
-        . "$HOME/.cargo/env"
-    else
-        echo "Warning: Rust environment file not found. Manually adding Rust to PATH."
-        export PATH="$HOME/.cargo/bin:$PATH"
-    fi
-fi
-
-set -e  # Re-enable exit on error
-
-# Verify Rust installation
-if ! command -v cargo &> /dev/null; then
-    echo "Error: Cargo (Rust) is not installed properly. Please restart your terminal and try again."
-    exit 1
-fi
-
-echo "Rust and Cargo installed successfully."
-
 # Detect system architecture
 ARCH=$(uname -m)
 
