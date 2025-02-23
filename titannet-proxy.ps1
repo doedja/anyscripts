@@ -21,7 +21,7 @@ FEATURES:
 
 REQUIREMENTS:
     - Windows PowerShell 5.1 or later
-    - Administrator privileges (handled by run_proxy.bat)
+    - Administrator privileges
     - Active SOCKS5 proxy connection
 
 CONFIGURATION:
